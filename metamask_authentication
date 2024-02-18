@@ -1,0 +1,58 @@
+//defining vars
+string profile = project.Variables["profile"].Value;
+string salt = project.Variables["salt"].Value; //your strong password enhancement
+string mmExtension = "MetaMask";
+
+//converting profile to integer
+int prosfileNum = int.Parse(profile);
+
+//loading list of extensions
+IZennoList extensionList = project.Lists["extension_list"]; 
+
+//checking if MM installed
+if(mmExtension == extensionList.ElementAt(extensionList.IndexOf(mmExtension)))
+{
+	//loading table
+	IZennoTable heissTable = project.Tables["heiss"];
+	
+	//getting password from table
+	string password = heissTable.GetCell("C", prosfileNum);
+	
+	//making strong password
+	string spicyPass = $"{password}{salt}";
+	
+	//loading extension tab
+	Tab tab = instance.ActiveTab;
+	if ((tab.IsVoid) || (tab.IsNull)) return -1;
+	if (tab.IsBusy) tab.WaitDownloading();
+	tab.Navigate("chrome-extension://fcplkeoijoilieppjflenhplbnfpmepp/home.html#onboarding/welcome", "");
+	if (tab.IsBusy) tab.WaitDownloading();
+	
+	//defining xPaths
+	string inputPass = "//input[@id='password']";
+	string unlockMM = "//button[text()='Unlock']";
+	
+	//defining elements
+	HtmlElement inputField = My.CheckElement(inputPass, instance);
+	HtmlElement unlockBtn = My.CheckElement(unlockMM, instance);
+	
+	//clicking input field
+	My.ClickMM(inputField, instance);
+	
+	//entering password
+	inputField.SetValue(spicyPass, "Full");
+	
+	//clicking Unlock button
+	My.ClickMM(unlockBtn, instance);
+	
+	//selecting Accounts
+	string accountMenu = "//button[contains(@data-testid,'account-menu-icon')]";
+	HtmlElement accountMenuBtn = My.CheckElement(accountMenu, instance);
+	My.ClickMM(accountMenuBtn, instance);
+	
+	//choosing 1st Account
+	string accountNum = "//button[contains(text(),'Account 1')]";
+	HtmlElement accountNumBtn = My.CheckElement(accountNum, instance);
+	My.ClickMM(accountNumBtn, instance);
+}
+else throw new Exception("No extension found. Install MetaMask");
