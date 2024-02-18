@@ -1,0 +1,24 @@
+string profileProxy = project.Variables["proxy"].Value;
+string proxyIp = project.Variables["proxy_ip"].Value;
+
+//install proxy
+instance.SetProxy(project.Variables["proxy"].Value, true, true, true, true);
+
+//load list of proxy-checkers
+IZennoList proxyList =  project.Lists["proxy_checker_list"]; //you should ahave a list of proxy checkers. Format:https://api.ipify.org
+
+//loop for proxy checking
+for(int i = 0; i < proxyList.Count(); i++)
+{
+	//get string from proxy-checkin list
+	string address = proxyList[i];
+	
+	//send GET
+	string resultHttpGet = ZennoPoster.HttpGet(address, profileProxy);
+	
+	//compare result
+	if(proxyIp == resultHttpGet)
+	{
+		return resultHttpGet;
+	}
+}
