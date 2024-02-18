@@ -1,3 +1,4 @@
+//You should have valid methods "CheckElement" (for checking HtmlElement), "ClickMM" (for raise click in Metamask) in your CommonCode (or My).
 //defining vars
 string profile = project.Variables["profile"].Value;
 string salt = project.Variables["salt"].Value; //your strong password enhancement
