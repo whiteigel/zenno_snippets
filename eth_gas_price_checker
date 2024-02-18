@@ -1,0 +1,42 @@
+string ethApiKey = project.Variables["eth_api_key"].Value;
+string url = $"https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey={ethApiKey}";
+int gasLimit = int.Parse(project.Variables["setup_gas_price_limit"].Value);
+
+string proxy = project.Variables["proxy"].Value;  // Прокси. Если не используется, то устанавливаем пустую строку.
+string encoding = "UTF-8"; //Кодировка
+int timeout = 30000; //Таймаут запроса
+string cookies = ""; //Куки
+string userAgent = project.Profile.UserAgent;; //Юзерагент
+bool useRedirect = true; //Редеректить ли автоматически запрос при необходимости. Например, когда ответ от сервера с кодом 302 в браузере вас автоматом перенаправит по другой ссылке.
+                          //В запросе мы можем этот отключить и нам вернется первоначальный ответ сервера.
+int maxRedirectCount = 5; //Максимальное количество редиректов. Для использования UseRedirect должен быть включен.
+string[] additionalHeaders = {};   // Дополнительные заголовки.
+
+Random rand = new Random();
+
+int limit = 1000;
+
+for (int i = 0; i <= limit; i++)
+{
+	//формируем запрос
+	string response = ZennoPoster.HttpGet(url, proxy, encoding, ZennoLab.InterfacesLibrary.Enums.Http.ResponceType.BodyOnly, timeout, cookies, userAgent, useRedirect, maxRedirectCount, additionalHeaders);
+
+	//парсим json
+	project.Json.FromString(response);
+		
+	int gasPrice = int.Parse(project.Json.result.ProposeGasPrice);
+	
+	if(gasPrice < gasLimit)
+	{
+		project.SendInfoToLog($"Gas price is {gasPrice}");
+		project.Variables["gas_price"].Value = gasPrice.ToString();
+		return gasPrice;
+	}
+	else
+	{
+		int rndPause = rand.Next(3, gasPrice);
+		project.SendInfoToLog($"Gas price is {gasPrice}");
+		project.SendInfoToLog($"Pause is {rndPause}");
+		System.Threading.Thread.Sleep(rndPause*1000);
+	}
+}
